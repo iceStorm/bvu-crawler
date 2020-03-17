@@ -1,10 +1,20 @@
-const request = require('request');
 const cheerio = require('cheerio');
 const fs = require('fs');
+const logger = require('morgan');
+const http = require('http');
+const bodyParser = require('body-parser');
+const express = require('express');
+const request = require('request');
+const router = express();
+const app = express();
 
 
-var express = require('express');
-var app = express();
+app.use(logger('dev'));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({extended: false}));
+var server = http.createServer(app);
+app.listen(process.env.PORT || 5000);
+app.get('/', (req, res) => { res.send("Server chạy ngon lành."); });
 app.get('/schedules',function(req, res)
 {
     const date = req.query.date;
@@ -13,13 +23,6 @@ app.get('/schedules',function(req, res)
 
     if (path !== "")
     {
-        // var data = fs.readFileSync(path);
-        // res.contentType("text/html");
-        // res.status(200);
-        // res.send(data);
-
-        // const pth = require('path');
-        // path = pth.resolve(path);
         res.send("Successfully.");
         // readPDFToText(path);
     }
@@ -29,12 +32,8 @@ app.get('/schedules',function(req, res)
         res.send("Chưa có lịch.");
     }
 });
-var server = app.listen(3000,function()
-{
-    console.log(`Server listening on port: 3000.`);
-    doCrawl();
-});
-
+app.listen(process.env.PORT || 3000);
+app.get('/', (req, res) => { res.send("Server chạy ngon lành."); });
 
 
 
