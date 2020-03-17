@@ -1,5 +1,5 @@
 
-const interval = 180000;    //  Auto every 30mins
+const interval = 1800000;    //  Auto run every 30mins
 const fs = require('fs');
 const logger = require('morgan');
 const http = require('http');
@@ -20,11 +20,11 @@ app.listen(process.env.PORT || 5000, () =>
 {
     console.log(`App started on port ${5000}.\n`);
 
-    // letCrawl();
-    // setInterval(() =>
-    // {
-    //     letCrawl();
-    // }, interval);
+    letCrawl();
+    setInterval(() =>
+    {
+        letCrawl();
+    }, interval);
 });
 app.get('/', (req, res) => { res.send("Server chạy ngon lành."); });
 app.get('/schedules',function(req, res)
@@ -35,9 +35,12 @@ app.get('/schedules',function(req, res)
 
     if (path !== "")
     {
-        res.status(200);
-        res.send("Successfully.");
-        // readPDFToText(path);
+        var data = fs.readFileSync(path);
+        res.contentType("application/pdf");
+        res.status(200).send("data);
+
+        // const crawler = require('./crawler');
+        // crawler.convertToXLS(path);
     }
     else
     {
@@ -51,15 +54,15 @@ app.get('/schedules',function(req, res)
 function getFilePath(date)
 {
     console.log("Required: " + date);
-    // const path = require('path');
+    const path = `./schedules/${date}/schedule_${date}.pdf`;
 
 
     try
     {
-        if (fs.existsSync(`./schedules/${date}`))
+        if (fs.existsSync(path))
         {
             console.log("Directory exists.")
-            return `./schedules/${date}/schedule.pdf`;
+            return path;
         }
         else
         {
@@ -75,9 +78,10 @@ function getFilePath(date)
 }
 
 
-function letCrawl()
+async function letCrawl()
 {
-    console.log("\nAuto cronjob ...");
+    console.log("\nAuto crawl starting ...");
     const crawler = require('./crawler');
-    crawler.doCrawl();
+    
+    let crawling = await crawler.doCrawl();
 }

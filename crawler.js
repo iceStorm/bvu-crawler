@@ -1,131 +1,92 @@
 module.exports = 
 {
-    doCrawl
+    doCrawl, convertToXLS
 }
 
 const fs = require('fs');
 const cheerio = require('cheerio');
 const request = require('request');
+const pdfreader = require("pdfreader");
 
 
-
-function parsePDFToText(filename)
+async function parsePDFToText(filename)
 {
-    var pdfreader = require("pdfreader");
-    var rows = {}; // indexed by y-position
+    try
+    {
+        var rows = {}; // indexed by y-position
     
 
-    new pdfreader.PdfReader().parseFileItems(filename, function(err, item)
-    {
-        if (!item || item.page)
+        new pdfreader.PdfReader().parseFileItems(filename, function(err, item)
         {
-            // end of file, or page
-            // printRows(lines, rows, filename.replace("pdf", "txt"));
-            rows = {}; // clear rows for next page
-        }
-        else if (item.text)
-        {
-            var obj = 
+            if (!item || item.page)
             {
-                department: "",
-                subjectname: "",
-                classname: "",
-                period: "",
-                teacher: "",
-                notes: "",
-                livetime: ""
+                // end of file, or page
+                // printRows(lines, rows, filename.replace("pdf", "txt"));
+                rows = {}; // clear rows for next page
             }
-
-
-            fs.appendFileSync(filename.replace("pdf", "txt"), JSON.stringify(item) + '\n');
-            // console.log(item);
-
-            // accumulate text items into rows object, per line
-            (rows[item.y] = rows[item.y] || []).push(item.text);
-        }
-    });
-
-        
-    function printRows(lines, rows, path)
-    {
-        Object.keys(rows) // => array of y-positions (type: float)
-            // .sort((y1, y2) => parseFloat(y1) - parseFloat(y2)) // sort float positions
-            .forEach(y =>
+            else if (item.text)
             {
-                // console.log((rows[y] || []).join("|"));
-                fs.appendFileSync(path, (rows[y]) + '\n');
-            });
+                // var obj = 
+                // {
+                //     department: "",
+                //     subjectname: "",
+                //     classname: "",
+                //     period: "",
+                //     teacher: "",
+                //     notes: "",
+                //     livetime: ""
+                // }
+    
+    
+                //  Ghi file bất đồng bộ
+                fs.appendFile(filename.replace("pdf", "txt"), JSON.stringify(item) + '\n', (err)=>
+                {
+                    if (err)
+                        console.log("Error: " + err);
+                });
+    
+                // console.log(item);
+                // accumulate text items into rows object, per line
+                (rows[item.y] = rows[item.y] || []).push(item.text);
+            }
+        });
+    }
+    catch(error)
+    {
+        Console.log(`Error: ${error}.\n`);
     }
 }
 
-
-function doCrawl()
+        
+function printRows(lines, rows, path)
 {
-    const URL = 'https://sinhvien.bvu.edu.vn';
-    const notation = 'Danh mục các học phần được tổ chức giảng dạy E-Learning có lịch học vào ngày';
-
-
-    request(
-    {
-        url: URL,
-        method: "GET",
-        strictSSL: false,
-        headers:
+    Object.keys(rows) // => array of y-positions (type: float)
+        // .sort((y1, y2) => parseFloat(y1) - parseFloat(y2)) // sort float positions
+        .forEach(y =>
         {
-            "Content-Type": "text/html"
-        }
-    },
-    function (err, res, body)
-    {
-        if(err)
-        {
-            console.log(err, "Error occured while hitting URL.");
-        }
-        else
-        {
-            const arr = [];
-            let $ = cheerio.load(body);  //loading of complete HTML body
-            $('div.body > div.item').each(function(index)
-            {
-                const aTag = $(this).find('p.title > a');
-                if (aTag.length)
-                {
-                    if (aTag.attr('title').indexOf(notation) != -1)
-                    {
-                        const date = aTag.attr('title').substring(aTag.attr('title').length - 10);
-                        const link = `https://sinhvien.bvu.edu.vn/${aTag.attr('href')}`;
-                        arr.push(`${date}|${link}`);
-                    }
-                }
-            });
-
-
-            if (arr.length)
-            {
-                getPDFsFromLinkList(arr);
-            }
-        }
-    });
+            // console.log((rows[y] || []).join("|"));
+            fs.appendFile(path, (rows[y]) + '\n');
+        });
 }
 
 
-function getPDFsFromLinkList(linkList)
+async function doCrawl()
 {
-    for (var i = 0; i < linkList.length; ++i)
+    try
     {
-        const date = linkList[i].split("|")[0];
-        const link = linkList[i].split("|")[1];
-        
+        const URL = 'https://sinhvien.bvu.edu.vn';
+        const notation = 'Danh mục các học phần được tổ chức giảng dạy E-Learning có lịch học vào ngày';
+    
 
         request
         ({
-            url: link,
+            url: URL,
             method: "GET",
+            strictSSL: false,
             headers:
             {
                 "Content-Type": "text/html"
-            },
-            strictSSL: false
+            }
         },
         function (err, res, body)
         {
@@ -135,65 +96,146 @@ function getPDFsFromLinkList(linkList)
             }
             else
             {
+                const arr = [];
                 let $ = cheerio.load(body);  //loading of complete HTML body
-                $('div.body > div#ctl00_ContentPlaceHolder_ContentID').each(function(index)
+                $('div.body > div.item').each(function(index)
                 {
-                    //  Tìm đường dẫn (thẻ a) đến file PDF trên Website trường
-                    const aTag = $(this).find('>p >a');
-                    const PDFlink = `https://sinhvien.bvu.edu.vn${aTag.attr('href')}`;
-                    savePDF(date, PDFlink);
+                    const aTag = $(this).find('p.title > a');
+                    if (aTag.length)
+                    {
+                        if (aTag.attr('title').indexOf(notation) != -1)
+                        {
+                            const date = aTag.attr('title').substring(aTag.attr('title').length - 10);
+                            const link = `https://sinhvien.bvu.edu.vn/${aTag.attr('href')}`;
+                            arr.push(`${date}|${link}`);
+                        }
+                    }
                 });
+    
+    
+                if (arr.length)
+                {
+                    getPDFsFromLinkList(arr);
+                }
             }
         });
-    };
+    }
+    catch (error)
+    {
+        console.log(`Error: ${error}.\n`);
+    }
+}
+
+
+async function getPDFsFromLinkList(linkList)
+{
+    try
+    {
+        for (var i = 0; i < linkList.length; ++i)
+        {
+            const date = linkList[i].split("|")[0];
+            const link = linkList[i].split("|")[1];
+            
+    
+            request
+            ({
+                url: link,
+                method: "GET",
+                strictSSL: false,
+                headers: { "Content-Type": "text/html" }
+            },
+            function (err, res, body)
+            {
+                if(err)
+                {
+                    Console.log("Error occured while hitting URL: " + err);
+                }
+                else
+                {
+                    let $ = cheerio.load(body);  //loading of complete HTML body
+                    $('div.body > div#ctl00_ContentPlaceHolder_ContentID').each(async function(index)
+                    {
+                        //  Tìm đường dẫn (thẻ a) đến file PDF trên Website trường
+                        const aTag = $(this).find('>p >a');
+                        const PDFlink = `https://sinhvien.bvu.edu.vn${aTag.attr('href')}`;
+                        savePDF(date, PDFlink);
+                    });
+                }
+            });
+        };
+    }
+    catch (error)
+    {
+        Console.log(`Error: ${error}.\n`);
+    }
 }
 
 
 async function savePDF(date, url)
 {
-    //  Thay thế các kí tự xoẹt trong chuỗi ngày tháng (tên file không cho phép kí tự xoẹt)
-    date = date.split('/').join('');
-
-    //  Khai báo đường dẫn đến tên file sẽ lưu
-    const filename = `./schedules/${date}/schedule_${date}.pdf`;
-
-    //  Tạo thư mục để lưu nếu chưa tồn tại
-    fs.mkdirSync(`./schedules/${date}`, { recursive: true })
-    let file = fs.createWriteStream(filename);
-
-
-    /* Using Promises so that we can use the ASYNC AWAIT syntax */        
-    await new Promise((resolve, reject) =>
+    try
     {
-        let stream = request(
+        if (fs.existsSync(`./schedules/${date}/schedule_${date}.pdf`) == false)
         {
+            return;
+        }
+
+
+        //  Thay thế các kí tự xoẹt trong chuỗi ngày tháng (tên file không cho phép kí tự xoẹt)
+        date = date.split('/').join('');
+    
+        //  Khai báo đường dẫn đến tên file sẽ lưu
+        const filename = `./schedules/${date}/schedule_${date}.pdf`;
+    
+        //  Tạo thư mục để lưu nếu chưa tồn tại
+        fs.mkdirSync(`./schedules/${date}`, { recursive: true })
+        let file = fs.createWriteStream(filename);
+    
+    
+    
+        request
+        ({
             uri: url,
-            strictSSL: false,
-            headers:
-            {
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
-                'Accept-Encoding': 'gzip, deflate, br',
-                'Accept-Language': 'en-US,en;q=0.9,fr;q=0.8,ro;q=0.7,ru;q=0.6,la;q=0.5,pt;q=0.4,de;q=0.3',
-                'Cache-Control': 'max-age=0',
-                'Connection': 'keep-alive',
-                'Upgrade-Insecure-Requests': '1',
-                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36'
-            }
+            strictSSL: false
         })
-            .pipe(file)
-                .on('finish', () =>
-                {
-                    console.log(`Finished downloading: ${filename}.`);
-                    parsePDFToText(filename);
-                    resolve();
-                })
-                    .on('error', (error) =>
-                    {
-                        reject(error);
-                    })
-    })
-        .catch(error =>
+            .pipe(file) //  lưu file từ URL
+            .on('finish', () =>
+            {
+                console.log(`Finished downloading: ${filename}.`);
+                // parsePDFToText(filename);
+            })
+            .on('error', (error) =>
+            {
+                reject(error);
+            })
+    }
+    catch(error)
+    {
+        console.log(`Error: ${error}.\n`);
+    }
+}
+
+
+async function convertToXLS(filename)
+{
+    var request = require('request'),
+    fs = require('fs'),
+    apiKey = '2569bf67731efe0fcf03f63ddfcb2b00becf034e',
+    formData = {
+        target_format: 'xlsx',
+        source_file: fs.createReadStream(filename)
+    };
+
+    request.post({url:'https://api.zamzar.com/v1/jobs/', formData: formData},
+    function (err, response, body)
+    {
+        if (err)
         {
-            console.log(`Something happened: ${error}.`);
-        });
+            console.error('Unable to start conversion job', err);
+        }
+        else
+        {
+            console.log('SUCCESS! Conversion job started:', JSON.parse(body));
+        }
+    }).auth(apiKey, '', true);
 }
