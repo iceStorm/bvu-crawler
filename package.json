@@ -1,0 +1,23 @@
+{
+  "name": "bvu-crawler",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Ocean",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.19.2",
+    "cheerio": "^1.0.0-rc.3",
+    "express": "^4.17.1",
+    "fs": "0.0.1-security",
+    "lodash": "^4.17.15",
+    "mkdirp": "^1.0.3",
+    "morgan": "^1.9.1",
+    "pdf2json": "^1.2.0",
+    "pdfreader": "^1.0.6",
+    "request": "^2.88.2"
+  }
+}
