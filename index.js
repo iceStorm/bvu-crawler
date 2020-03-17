@@ -20,11 +20,11 @@ app.listen(process.env.PORT || 5000, () =>
 {
     console.log(`App started on port ${5000}.\n`);
 
-    letCrawl();
-    setInterval(() =>
-    {
-        letCrawl();
-    }, interval);
+    // letCrawl();
+    // setInterval(() =>
+    // {
+    //     letCrawl();
+    // }, interval);
 });
 app.get('/', (req, res) => { res.send("Server chạy ngon lành."); });
 app.get('/schedules',function(req, res)
