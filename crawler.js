@@ -7,6 +7,7 @@ const fs = require('fs');
 const cheerio = require('cheerio');
 const request = require('request');
 const pdfreader = require("pdfreader");
+const pdfParser = require("./pdfConverter");
 
 
 async function parsePDFToText(filename)
@@ -175,7 +176,7 @@ async function savePDF(date, url)
 {
     try
     {
-        if (fs.existsSync(`./schedules/${date}/schedule_${date}.pdf`) == false)
+        if (fs.existsSync(`./schedules/${date}/schedule_${date}.pdf`) === true)
         {
             return;
         }
@@ -202,7 +203,7 @@ async function savePDF(date, url)
             .on('finish', () =>
             {
                 console.log(`Finished downloading: ${filename}.`);
-                // parsePDFToText(filename);
+                pdfParser.letConvert(filename);
             })
             .on('error', (error) =>
             {

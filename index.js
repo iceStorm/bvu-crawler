@@ -38,9 +38,6 @@ app.get('/schedules',function(req, res)
         var data = fs.readFileSync(path);
         res.contentType("application/pdf");
         res.status(200).send(data);
-
-        // const crawler = require('./crawler');
-        // crawler.convertToXLS(path);
     }
     else
     {
