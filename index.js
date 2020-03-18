@@ -16,9 +16,9 @@ app.use(bodyParser.urlencoded({extended: false}));
 var server = http.createServer(app);
 
 
-app.listen(process.env.PORT || 5000, () =>
+app.listen(process.env.PORT || 3000, () =>
 {
-    console.log(`App started on port ${5000}.\n`);
+    console.log(`App started on port ${3000}.\n`);
 
     letCrawl();
     setInterval(() =>
@@ -75,10 +75,16 @@ function getFilePath(date)
 }
 
 
-async function letCrawl()
+function letCrawl()
 {
-    console.log("\nAuto crawl starting ...");
-    const crawler = require('./crawler');
-    
-    let crawling = await crawler.doCrawl();
+    try
+    {
+        console.log("\nAuto crawl starting ...");
+        const crawler = require('./crawler');
+        crawler.doCrawl();
+    }
+    catch(err)
+    {
+        console.log(err);
+    }
 }
