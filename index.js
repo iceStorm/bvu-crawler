@@ -18,8 +18,10 @@ var server = http.createServer(app);
 app.listen(process.env.PORT || 3000, () =>
 {
     console.log(`App started on port ${3000}.\n`);
+    const interval = 300000;    //  Auto crawling each 5mins
 
-    letCrawl();
+
+    // letCrawl();
     setInterval(() =>
     {
         letCrawl();
@@ -35,7 +37,7 @@ app.get('/schedules',function(req, res)
     if (path !== "")
     {
         var data = fs.readFileSync(path);
-        res.contentType("application/pdf");
+        res.contentType("text/html");
         res.status(200).send(data);
     }
     else
@@ -50,7 +52,7 @@ app.get('/schedules',function(req, res)
 function getFilePath(date)
 {
     console.log("Required: " + date);
-    const path = `./schedules/${date}/schedule_${date}.pdf`;
+    const path = `./schedules/${date}/schedule_${date}.txt`;
 
 
     try
@@ -78,7 +80,6 @@ function letCrawl()
 {
     try
     {
-        const interval = 300000;    //  Auto crawling each 5mins
         console.log("\nAuto crawl starting ...");
         const crawler = require('./crawler');
         crawler.doCrawl();
