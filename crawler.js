@@ -3,8 +3,7 @@ module.exports = { doCrawl }
 const fs = require('fs');
 const cheerio = require('cheerio');
 const request = require('request');
-const pdfreader = require("pdfreader");
-const pdfParser = require("./pdfConverter");
+const xlsxConverter = require("./xlsxConverter");
 
 
 
@@ -13,9 +12,8 @@ async function doCrawl()
     try
     {
         let links = await getLinkList();
-        // console.log(links);
         let linkFile = await getLinkFileFromLinkList(links);
-        console.log("Files: " + linkFile.length);
+        console.log(`Files: ${linkFile.length} was found.`);
         let saving = await savePDF(linkFile);
         console.log(`Crawling finished. ${saving} changes.\n`);
     }
@@ -86,8 +84,8 @@ async function getLinkFileFromLinkList(linkList)
 {
     try
     {
-        var linkFile = [];
-        for (var i = 0; i < linkList.length; ++i)
+        let linkFile = [];
+        for (let i = 0; i < linkList.length; ++i)
         {
             const date = linkList[i].split("|")[0];
             const link = linkList[i].split("|")[1];
@@ -140,19 +138,14 @@ async function savePDF(linkFileList)
     try
     {
         let changes = 0;
-        for (var i = 0; i < linkFileList.length; ++i)
+        for (let i = 0; i < linkFileList.length; ++i)
         {
             //  Thay thế các kí tự xoẹt trong chuỗi ngày tháng (tên file không cho phép kí tự xoẹt)
             let date = linkFileList[i].Date.split('/').join('');
 
             //  Khai báo đường dẫn đến tên file sẽ lưu
             const filename = `./schedules/${date}/schedule_${date}.pdf`;
-            if (fs.existsSync(filename) === true)
-            {
-                continue;   //  bỏ qua nếu đã tồn tại
-            }
-
-
+            if (fs.existsSync(filename) === true) { continue; }    //  bỏ qua nếu đã tồn tại tập tin
 
             //  Tạo thư mục để lưu nếu chưa tồn tại
             fs.mkdirSync(`./schedules/${date}`, { recursive: true })
@@ -169,9 +162,15 @@ async function savePDF(linkFileList)
                     .pipe(file) //  lưu file từ URL
                         .on('finish', async () =>
                         {
-                            console.log(`Finished downloading: ${filename}.`);
-                            let converting = await pdfParser.letConvert(filename);
-                            resolve(1);
+                            console.log(`Finished: ${filename}.`);
+                            let converting = await xlsxConverter.download(filename);
+                            console.log(converting);
+                            setTimeout( async() =>
+                            {
+                                let saving = await xlsxConverter.saveToJSON(filename.replace("pdf", "xlsx"));
+                                console.log(saving);
+                                return resolve(1);
+                            }, 2000);
                         })
                             .on('error', (error) =>
                             {

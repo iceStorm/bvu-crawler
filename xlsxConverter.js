@@ -1,55 +1,66 @@
-module.exports = { saveToJSON };
+module.exports = { download, saveToJSON };
 
 
-function toRawJSON(filename)
+
+async function toRawJSON(filename)
 {
-    return new Promise((resolve, reject)=>
+    try
     {
-        try
-        { 
-            const XLSX = require('xlsx');
-            const workbook = XLSX.readFile('./schedules/19032020/schedule_19032020.xlsx');
-            const sheet_name_list = workbook.SheetNames;
-            resolve(XLSX.utils.sheet_to_json(workbook.Sheets[sheet_name_list[0]]));
-        }
-        catch(err)
+        if (filename.indexOf('xlsx') === -1)
         {
-            reject(err);
+            console.log(`Error at: toRawJSON(): ${filename} not a Excel file.`);
+            return;
         }
-    });
+
+        const XLSX = require('xlsx');
+        const workbook = XLSX.readFile(filename);
+        const sheet_name_list = workbook.SheetNames;
+        var json = (XLSX.utils.sheet_to_json(workbook.Sheets[sheet_name_list[0]]));
+        return json;
+    }
+    catch (err)
+    {
+        console.log("Error at: toRawJSON(): " + err);
+    }
 }
 
-function replaceJSONKeys(rawJSON)
+async function replaceJSONKeys(rawJSON)
 {
-    return new Promise(function(resolve, reject)
+    try
     {
         rawJSON = JSON.stringify(rawJSON);
+
         rawJSON = rawJSON.replace(/"__EMPTY_1"/gm, "\"Class\"");
         rawJSON = rawJSON.replace(/"__EMPTY_2"/gm, "\"Period\"");
         rawJSON = rawJSON.replace(/"__EMPTY_3"/gm, "\"Teacher\"");
         rawJSON = rawJSON.replace(/"__EMPTY_4"/gm, "\"Notes\"");
         rawJSON = rawJSON.replace(/"__EMPTY_5"/gm, "\"LiveTime\"");
         rawJSON = rawJSON.replace(/"__EMPTY"/gm, "\"Subject\"");
-        const regex = /"DANH MỤC.*?"/gm;
-        rawJSON = rawJSON.replace(regex, "\"Ordinal\"");
-        
-        resolve(rawJSON);
-    });
+        rawJSON = rawJSON.replace(/"DANH MỤC.*?"/gm, "\"Ordinal\"");
+
+        rawJSON = JSON.parse(rawJSON);
+        return rawJSON;
+    }
+    catch (err)
+    {
+        console.log("Error at: replaceJSONKeys(): " + err);
+    }
 }
 
-function reformatJSON(json)
+async function reformatJSON(json)
 {
-    return new Promise((resolve, reject)=>
+    try
     {
-        var collection = [];
-        var departmentCounter = -1;
-    
-        for (var i = 0; i < json.length; ++i)
+        let collection = [];
+        let departmentCounter = -1;
+
+        for (let i = 0; i < json.length; ++i)
         {
             if (typeof json[i].Ordinal === "number")  //  Số thứ tự của môn học
             {
-                var subject =
+                let subject =
                 {
+                    Name: json[i].Subject,
                     Class: json[i].Class,
                     Period: json[i].Period,
                     Teacher: json[i].Teacher,
@@ -61,15 +72,15 @@ function reformatJSON(json)
             }
             else
             {
-                var dpIndex;
-                var dpName;
+                let dpIndex;
+                let dpName;
 
 
                 if (json[i].Ordinal.includes("Khoa")) //  Là bắt đầu một Khoa khác
                 {
                     dpIndex = json[i].Ordinal.indexOf("Khoa");
                     dpName = json[i].Ordinal.substr(dpIndex);
-                    var department = { Department: dpName, Subjects: [] };
+                    let department = { Department: dpName, Subjects: [] };
                     collection.push(department);
                     ++departmentCounter;
                 }
@@ -79,44 +90,85 @@ function reformatJSON(json)
                     {
                         dpIndex = json[i].Ordinal.indexOf("Trung");
                         dpName = json[i].Ordinal.substr(dpIndex);
-                        var department = { Department: dpName, Subjects: [] };
+                        let department = { Department: dpName, Subjects: [] };
                         collection.push(department);
                         ++departmentCounter;
                     }
                 }
             }
         }
-    
-        resolve(collection);
-    });
-}
 
-
-
-function saveToJSON(filename)
-{
-    return new Promise((resolve, reject) =>
+        return collection;
+    }
+    catch (err)
     {
-        toRawJSON(filename)
-            .then(rawJSON =>
-            {
-                return replaceJSONKeys(rawJSON);
-            })
-                .then(replaced =>
-                {
-                    return reformatJSON(JSON.parse(replaced));
-                })
-                   .then(collection =>
-                    {
-                        filename = filename.replace("xlsx", "txt");
-                        const fs = require("fs");
-                        fs.writeFileSync(filename, JSON.stringify(collection));
-                        console.log("Finished convert to: " + filename);
-                        resolve();
-                    })
-                        .catch(err =>
-                        {
-                            reject(err);
-                        });
-    });
+        console.log("Error at: reformatJSON(): " + err);
+    }
 }
+
+async function saveToJSON(filename)
+{
+    try
+    {
+        let rawJSON = await toRawJSON(filename);
+        // console.log("Raw: " + rawJSON);
+        let replaced = await replaceJSONKeys(rawJSON);
+        // console.log("Replaced: " + replaced);
+        let formatted = await reformatJSON(replaced);
+        // console.log("Formatted: " + formatted);
+        
+        filename = filename.replace("xlsx", "txt");
+        const fs = require("fs");
+        fs.writeFileSync(filename, JSON.stringify(formatted));
+        return ("Finished convert to: " + filename);
+    }
+    catch (err)
+    {
+        console.log(err);
+    }
+}
+
+
+async function download(filename)
+{
+    try
+    {
+        let stream = await new Promise((resolve, reject) =>
+        {
+            // https://www.convertapi.com/a
+            const api = '9RekTtUW7QwZTTYS';
+            const convertapi = require('convertapi')(api,
+            {
+                conversionTimeout: 60,
+                uploadTimeout: 60,
+                downloadTimeout: 60
+            });
+    
+    
+            convertapi.convert('xlsx', { File: filename })
+            .then(result =>
+            {
+                // get converted file url
+                // console.log("Converted file url: " + result.file.url);
+
+                // save to file
+                return result.file.save(filename.replace("pdf", "xlsx"));
+            })
+            .then(filename =>
+            {
+                return resolve("File saved: " + filename);
+            })
+            .catch(err =>
+            {
+                return reject(err);
+            });
+        });
+
+        return stream;
+    }
+    catch (err)
+    {
+        return err;
+    }
+}
+

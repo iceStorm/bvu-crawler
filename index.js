@@ -1,5 +1,4 @@
 
-const interval = 1800000;    //  Auto run every 30mins
 const fs = require('fs');
 const logger = require('morgan');
 const http = require('http');
@@ -79,6 +78,7 @@ function letCrawl()
 {
     try
     {
+        const interval = 300000;    //  Auto crawling each 5mins
         console.log("\nAuto crawl starting ...");
         const crawler = require('./crawler');
         crawler.doCrawl();
