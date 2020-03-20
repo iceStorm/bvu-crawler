@@ -25,7 +25,7 @@ async function doCrawl()
             (
                 {
                     method: 'POST',
-                    url: 'https://cf0c53f6.ngrok.io/newSchedules',
+                    url: 'https://bb452260.ngrok.io/newSchedules',
                     json: {changes}
                 },
                 function(err, res, body)
