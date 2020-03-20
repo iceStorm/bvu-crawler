@@ -14,8 +14,33 @@ async function doCrawl()
         let links = await getLinkList();
         let linkFile = await getLinkFileFromLinkList(links);
         console.log(`Files: ${linkFile.length} was found.`);
-        let saving = await savePDF(linkFile);
-        console.log(`Crawling finished. ${saving} changes.\n`);
+        let changes = await savePDF(linkFile);
+        changes = JSON.parse(JSON.stringify(changes));
+        console.log(`Crawling finished. ${changes.length} changes.`);
+
+        
+        if (changes.length > 0)
+        {
+            request
+            (
+                {
+                    method: 'POST',
+                    url: 'https://cf0c53f6.ngrok.io/newSchedules',
+                    json: {changes}
+                },
+                function(err, res, body)
+                {
+                    if(err || (res.statusCode != 200))
+                    {
+                        console.log("Informing to ChatBot failed: " + err);
+                    }
+                    else
+                    {
+                        console.log("Successfully inform to ChatBot.");
+                    }
+                }
+            );
+        }
     }
     catch (err)
     {
@@ -137,7 +162,7 @@ async function savePDF(linkFileList)
 {
     try
     {
-        let changes = 0;
+        let changes = [];
         for (let i = 0; i < linkFileList.length; ++i)
         {
             //  Thay thế các kí tự xoẹt trong chuỗi ngày tháng (tên file không cho phép kí tự xoẹt)
@@ -169,18 +194,20 @@ async function savePDF(linkFileList)
                             {
                                 let saving = await xlsxConverter.saveToJSON(filename.replace("pdf", "xlsx"));
                                 console.log(saving);
-                                return resolve(1);
+                                return resolve({Date: date});
                             }, 2000);
                         })
                             .on('error', (error) =>
                             {
                                 console.log(error);
-                                return reject(0);
+                                return reject({});
                             });
             });
 
 
-            changes += stream;
+            // console.log(stream);
+            // if (stream.keys(Date).length)
+            changes.push(stream);
         }
 
         return changes;

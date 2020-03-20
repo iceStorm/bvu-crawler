@@ -1,4 +1,6 @@
 
+const interval = 300000;    //  Auto crawling each 5mins
+const crawler = require('./crawler');
 const fs = require('fs');
 const logger = require('morgan');
 const http = require('http');
@@ -15,35 +17,43 @@ app.use(bodyParser.urlencoded({extended: false}));
 var server = http.createServer(app);
 
 
-app.listen(process.env.PORT || 3000, () =>
+const port = 5000;
+app.listen(process.env.PORT || port, () =>
 {
-    console.log(`App started on port ${3000}.\n`);
-    const interval = 300000;    //  Auto crawling each 5mins
-
-
-    // letCrawl();
+    console.log(`App started on port ${port}.\n`);
     setInterval(() =>
     {
         letCrawl();
     }, interval);
 });
+
 app.get('/', (req, res) => { res.send("Server chạy ngon lành."); });
+
 app.get('/schedules',function(req, res)
 {
     const date = req.query.date;
+    const classname = req.query.class;
     var path = getFilePath(date);
 
 
     if (path !== "")
     {
-        var data = fs.readFileSync(path);
-        res.contentType("text/html");
-        res.status(200).send(data);
+        if (classname)
+        {
+            let json = getJSONbyClassName(path, classname);
+            res.contentType("text/html");
+            res.status(200).send(json);
+        }
+        else
+        {
+            var data = fs.readFileSync(path);
+            res.contentType("text/html");
+            res.status(200).send(data);
+        }
     }
     else
     {
-        res.status(404);
-        res.send("Chưa có lịch.");
+        res.status(404).send("Chưa có lịch.");
     }
 });
 
@@ -81,11 +91,32 @@ function letCrawl()
     try
     {
         console.log("\nAuto crawl starting ...");
-        const crawler = require('./crawler');
         crawler.doCrawl();
     }
     catch(err)
     {
         console.log(err);
     }
+}
+
+
+function getJSONbyClassName(filename, expectedClassname)
+{
+    let classes = [];
+    let json = fs.readFileSync(filename, {encoding: 'utf8'});
+    json = JSON.parse(json);
+    // console.log(json);
+
+    for (let i = 0; i < json.length; ++i)
+    {
+        let subjects = json[i].Subjects;
+        for (let j = 0; j < subjects.length; ++j)
+        {
+            let classname = subjects[j].Class.toLowerCase();
+            if (classname === expectedClassname.toLowerCase())
+                classes.push(subjects[j]);
+        }
+    }
+
+    return classes;
 }
