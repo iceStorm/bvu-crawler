@@ -21,6 +21,9 @@ const port = 5000;
 app.listen(process.env.PORT || port, () =>
 {
     console.log(`App started on port ${port}.\n`);
+
+    
+    letCrawl();
     setInterval(() =>
     {
         letCrawl();
@@ -113,7 +116,7 @@ function getJSONbyClassName(filename, expectedClassname)
         for (let j = 0; j < subjects.length; ++j)
         {
             let classname = subjects[j].Class.toLowerCase();
-            if (classname === expectedClassname.toLowerCase())
+            if (classname.indexOf(expectedClassname.toLowerCase()) != -1)
                 classes.push(subjects[j]);
         }
     }

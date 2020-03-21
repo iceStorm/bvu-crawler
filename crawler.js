@@ -166,7 +166,8 @@ async function savePDF(linkFileList)
         for (let i = 0; i < linkFileList.length; ++i)
         {
             //  Thay thế các kí tự xoẹt trong chuỗi ngày tháng (tên file không cho phép kí tự xoẹt)
-            let date = linkFileList[i].Date.split('/').join('');
+            let sendingDate = linkFileList[i].Date.split('/').join('-');    //  gửi cho chatbot
+            let date = linkFileList[i].Date.split('/').join('');    //  dùng trong hàm này
 
             //  Khai báo đường dẫn đến tên file sẽ lưu
             const filename = `./schedules/${date}/schedule_${date}.pdf`;
@@ -194,7 +195,7 @@ async function savePDF(linkFileList)
                             {
                                 let saving = await xlsxConverter.saveToJSON(filename.replace("pdf", "xlsx"));
                                 console.log(saving);
-                                return resolve({Date: date});
+                                return resolve({Date: sendingDate, Link: linkFileList[i].Link});
                             }, 2000);
                         })
                             .on('error', (error) =>
