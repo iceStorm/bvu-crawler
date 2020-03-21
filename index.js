@@ -116,7 +116,8 @@ function getJSONbyClassName(filename, expectedClassname)
         for (let j = 0; j < subjects.length; ++j)
         {
             let classname = subjects[j].Class.toLowerCase();
-            if (classname.indexOf(expectedClassname.toLowerCase()) != -1)
+            classname = classname.replace('\r\n', '');
+            if (classname === expectedClassname.toLowerCase())
                 classes.push(subjects[j]);
         }
     }
