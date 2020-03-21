@@ -37,6 +37,7 @@ async function replaceJSONKeys(rawJSON)
         rawJSON = rawJSON.replace(/"__EMPTY_5"/gm, "\"LiveTime\"");
         rawJSON = rawJSON.replace(/"__EMPTY"/gm, "\"Subject\"");
         rawJSON = rawJSON.replace(/"DANH MỤC.*?"/gm, "\"Ordinal\"");
+        rawJSON = rawJSON.replace(/\\r\\n/gm, "\"\"");
 
         rawJSON = JSON.parse(rawJSON);
         return rawJSON;
