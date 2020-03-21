@@ -25,7 +25,7 @@ async function doCrawl()
             (
                 {
                     method: 'POST',
-                    url: 'https://bb452260.ngrok.io/newSchedules',
+                    url: 'https://bvu-chatbot.herokuapp.com/newSchedules',
                     json: {changes}
                 },
                 function(err, res, body)
@@ -83,7 +83,8 @@ async function getLinkList()
                         {
                             if (aTag.attr('title').indexOf(notation) != -1)
                             {
-                                const date = aTag.attr('title').substring(aTag.attr('title').length - 10);
+                                let matching = aTag.attr('title').match(new RegExp(/\d{2}\/\d{2}\/\d{4}/g));
+                                const date = matching[0];
                                 const link = `https://sinhvien.bvu.edu.vn/${aTag.attr('href')}`;
                                 linkList.push(`${date}|${link}`);
                             }
@@ -166,8 +167,7 @@ async function savePDF(linkFileList)
         for (let i = 0; i < linkFileList.length; ++i)
         {
             //  Thay thế các kí tự xoẹt trong chuỗi ngày tháng (tên file không cho phép kí tự xoẹt)
-            let sendingDate = linkFileList[i].Date.split('/').join('-');    //  gửi cho chatbot
-            let date = linkFileList[i].Date.split('/').join('');    //  dùng trong hàm này
+            let date = linkFileList[i].Date.split('/').join('-');
 
             //  Khai báo đường dẫn đến tên file sẽ lưu
             const filename = `./schedules/${date}/schedule_${date}.pdf`;
@@ -195,7 +195,7 @@ async function savePDF(linkFileList)
                             {
                                 let saving = await xlsxConverter.saveToJSON(filename.replace("pdf", "xlsx"));
                                 console.log(saving);
-                                return resolve({Date: sendingDate, Link: linkFileList[i].Link});
+                                return resolve({Date: date, Link: linkFileList[i].Link});
                             }, 2000);
                         })
                             .on('error', (error) =>

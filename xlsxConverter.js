@@ -29,17 +29,33 @@ async function replaceJSONKeys(rawJSON)
     try
     {
         rawJSON = JSON.stringify(rawJSON);
+        let updated = rawJSON.indexOf("__EMPTY_4") !== -1;
+        console.log("\nUpdated: " + updated);
 
-        rawJSON = rawJSON.replace(/"__EMPTY_1"/gm, "\"Class\"");
-        rawJSON = rawJSON.replace(/"__EMPTY_2"/gm, "\"Period\"");
-        rawJSON = rawJSON.replace(/"__EMPTY_3"/gm, "\"Teacher\"");
-        rawJSON = rawJSON.replace(/"__EMPTY_4"/gm, "\"Notes\"");
-        rawJSON = rawJSON.replace(/"__EMPTY_5"/gm, "\"LiveTime\"");
-        rawJSON = rawJSON.replace(/"__EMPTY"/gm, "\"Subject\"");
-        rawJSON = rawJSON.replace(/"DANH MỤC.*?"/gm, "\"Ordinal\"");
-        rawJSON = rawJSON.replace(/\\r\\n/gm, "");
+        if (!updated)
+        {
+            rawJSON = rawJSON.replace(/"__EMPTY_1"/gm, "\"Class\"");
+            rawJSON = rawJSON.replace(/"__EMPTY_2"/gm, "\"Period\"");
+            rawJSON = rawJSON.replace(/"__EMPTY_3"/gm, "\"Teacher\"");
+            rawJSON = rawJSON.replace(/"__EMPTY_4"/gm, "\"Notes\"");
+            rawJSON = rawJSON.replace(/"__EMPTY_5"/gm, "\"LiveTime\"");
+            rawJSON = rawJSON.replace(/"__EMPTY"/gm, "\"Subject\"");
+            rawJSON = rawJSON.replace(/"DANH MỤC.*?"/gm, "\"Ordinal\"");
+            rawJSON = rawJSON.replace(/\\r\\n/gm, "");
+        }
+        else    //  For updated PDFs
+        {
+            rawJSON = rawJSON.replace(/"__EMPTY_1"/gm, "\"Class\"");
+            rawJSON = rawJSON.replace(/"__EMPTY_2"/gm, "\"Period\"");
+            rawJSON = rawJSON.replace(/"__EMPTY_3"/gm, "\"Teacher\"");
+            rawJSON = rawJSON.replace(/"__EMPTY_5"/gm, "\"Notes\"");
+            rawJSON = rawJSON.replace(/"__EMPTY_6"/gm, "\"LiveTime\"");
+            rawJSON = rawJSON.replace(/"__EMPTY"/gm, "\"Subject\"");
+            rawJSON = rawJSON.replace(/"DANH MỤC.*?"/gm, "\"Ordinal\"");
+            rawJSON = rawJSON.replace(/\\r\\n/gm, "");
+        }
 
-        console.log(rawJSON);
+        // console.log(rawJSON);
         rawJSON = JSON.parse(rawJSON);
         return rawJSON;
     }
@@ -113,11 +129,11 @@ async function saveToJSON(filename)
     try
     {
         let rawJSON = await toRawJSON(filename);
-        // console.log("Raw: " + rawJSON);
+        // console.log("Raw: " + JSON.stringify(rawJSON));
         let replaced = await replaceJSONKeys(rawJSON);
-        // console.log("Replaced: " + replaced);
+        // console.log("Replaced: " + JSON.stringify(replaced));
         let formatted = await reformatJSON(replaced);
-        // console.log("Formatted: " + formatted);
+        // console.log("Formatted: " + JSON.stringify(formatted));
         
         filename = filename.replace("xlsx", "txt");
         const fs = require("fs");
@@ -138,7 +154,9 @@ async function download(filename)
         let stream = await new Promise((resolve, reject) =>
         {
             // https://www.convertapi.com/a
-            const api = '9RekTtUW7QwZTTYS';
+            const fs = require('fs');
+            const api = fs.readFileSync('./convertKEY.txt', {encoding: 'utf8'});
+            console.log('API key: ' + api);
             const convertapi = require('convertapi')(api,
             {
                 conversionTimeout: 60,
@@ -173,4 +191,3 @@ async function download(filename)
         return err;
     }
 }
-

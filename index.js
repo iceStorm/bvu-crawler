@@ -1,5 +1,5 @@
 
-const interval = 300000;    //  Auto crawling each 5mins
+const interval = 1800000;    //  Auto crawling each 5mins
 const crawler = require('./crawler');
 const fs = require('fs');
 const logger = require('morgan');
@@ -44,8 +44,15 @@ app.get('/schedules',function(req, res)
         if (classname)
         {
             let json = getJSONbyClassName(path, classname);
-            res.contentType("text/html");
-            res.status(200).send(json);
+            if (json.length)
+            {
+                res.contentType("text/html");
+                res.status(200).send(json);
+            }
+            else
+            {
+                res.status(404).send([]);
+            }
         }
         else
         {
@@ -56,8 +63,21 @@ app.get('/schedules',function(req, res)
     }
     else
     {
-        res.status(404).send("Chưa có lịch.");
+        res.status(404).send([]);
     }
+});
+
+app.get('/followingSchedules', async function(req, res)
+{
+    res.status(200).send(await getFollowingSchedules());
+});
+
+app.get('/changeConvertAPI', function(req, res)
+{
+    let apiKey = req.query.key;
+    console.log(apiKey);
+    fs.writeFileSync('./convertKEY.txt', apiKey);
+    res.status(200).send('API key updated successfully.');
 });
 
 
@@ -123,4 +143,82 @@ function getJSONbyClassName(filename, expectedClassname)
     }
 
     return classes;
+}
+
+
+async function getFollowingSchedules()
+{
+    try
+    {
+        let currDate = await getCurrentDate();
+        let currSegs = currDate.split('-');
+
+
+        let stream = await new Promise((resolve, reject) =>
+        {
+            fs.readdir('./schedules/', (err, files) =>
+            {
+                if (err)
+                    console.log(err);
+                else
+                {
+                    let followingDates = [];
+                    files.forEach((value, index) =>
+                    {
+                        let segments = value.split('-');
+                        if (parseInt(currSegs[0], 10) <= parseInt(segments[0], 10))
+                        {
+                            followingDates.push(value);
+                        }
+                        else
+                            if (parseInt(currSegs[1], 10) < parseInt(segments[1], 10))
+                            {
+                                followingDates.push(value);
+                            }
+                            else
+                                if (parseInt(currSegs[2], 10) < parseInt(segments[2], 10))
+                                {
+                                    followingDates.push(value);
+                                }
+                    });
+
+
+                    return resolve(followingDates);
+                }
+            });
+        });
+
+
+        return stream;
+    }
+    catch (err)
+    {
+        console.log(err);
+    }
+}
+
+
+async function getCurrentDate()
+{
+    try
+    {
+        let stream = await new Promise((resolve, reject) =>
+        {
+            let d = new Date();
+            let date = d.getDate();
+            let dateString = (date >= 10) ? date:`0${date}`;
+            let month = d.getMonth() + 1;
+            let monthString = (month >= 10) ? month: `0${month}`;
+            let year = d.getFullYear();
+    
+            return resolve(`${dateString}-${monthString}-${year}`);
+        });
+
+
+        return stream;
+    }
+    catch (err)
+    {
+        console.log(err);
+    }
 }
