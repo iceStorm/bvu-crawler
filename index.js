@@ -1,5 +1,5 @@
 
-const interval = 1800000;    //  Auto crawling each 5mins
+const interval = 600000;    //  Auto crawling each 10mins
 const crawler = require('./crawler');
 const fs = require('fs');
 const logger = require('morgan');

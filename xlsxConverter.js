@@ -29,33 +29,8 @@ async function replaceJSONKeys(rawJSON)
     try
     {
         rawJSON = JSON.stringify(rawJSON);
-        let updated = rawJSON.indexOf("__EMPTY_4") !== -1;
-        console.log("\nUpdated: " + updated);
-
-        if (!updated)
-        {
-            rawJSON = rawJSON.replace(/"__EMPTY_1"/gm, "\"Class\"");
-            rawJSON = rawJSON.replace(/"__EMPTY_2"/gm, "\"Period\"");
-            rawJSON = rawJSON.replace(/"__EMPTY_3"/gm, "\"Teacher\"");
-            rawJSON = rawJSON.replace(/"__EMPTY_4"/gm, "\"Notes\"");
-            rawJSON = rawJSON.replace(/"__EMPTY_5"/gm, "\"LiveTime\"");
-            rawJSON = rawJSON.replace(/"__EMPTY"/gm, "\"Subject\"");
-            rawJSON = rawJSON.replace(/"DANH MỤC.*?"/gm, "\"Ordinal\"");
-            rawJSON = rawJSON.replace(/\\r\\n/gm, "");
-        }
-        else    //  For updated PDFs
-        {
-            rawJSON = rawJSON.replace(/"__EMPTY_1"/gm, "\"Class\"");
-            rawJSON = rawJSON.replace(/"__EMPTY_2"/gm, "\"Period\"");
-            rawJSON = rawJSON.replace(/"__EMPTY_3"/gm, "\"Teacher\"");
-            rawJSON = rawJSON.replace(/"__EMPTY_5"/gm, "\"Notes\"");
-            rawJSON = rawJSON.replace(/"__EMPTY_6"/gm, "\"LiveTime\"");
-            rawJSON = rawJSON.replace(/"__EMPTY"/gm, "\"Subject\"");
-            rawJSON = rawJSON.replace(/"DANH MỤC.*?"/gm, "\"Ordinal\"");
-            rawJSON = rawJSON.replace(/\\r\\n/gm, "");
-        }
-
-        // console.log(rawJSON);
+        rawJSON = rawJSON.replace(/"DANH MỤC.*?"/gm, "\"Ordinal\"");
+        rawJSON = rawJSON.replace(/\\r\\n/gm, "");
         rawJSON = JSON.parse(rawJSON);
         return rawJSON;
     }
@@ -74,16 +49,19 @@ async function reformatJSON(json)
 
         for (let i = 0; i < json.length; ++i)
         {
-            if (typeof json[i].Ordinal === "number")  //  Số thứ tự của môn học
+            if (typeof json[i].Ordinal === "number")  //  Số thứ tự của các môn học trong một Khoa
             {
+                
+
+
                 let subject =
                 {
-                    Name: json[i].Subject,
-                    Class: json[i].Class,
-                    Period: json[i].Period,
-                    Teacher: json[i].Teacher,
-                    Notes: json[i].Notes || "",
-                    LiveTime: json[i].LiveTime  || ""
+                    Name: json[i]['__EMPTY'],
+                    Class: json[i]['__EMPTY_1'],
+                    Period: json[i]['__EMPTY_2'],
+                    Teacher: json[i]['__EMPTY_3'],
+                    Notes: json[i]['__EMPTY_5'] || 'Không',
+                    LiveTime: json[i]['__EMPTY_6'] || 'Không'
                 }
                 
                 collection[departmentCounter].Subjects.push(subject);
@@ -129,11 +107,11 @@ async function saveToJSON(filename)
     try
     {
         let rawJSON = await toRawJSON(filename);
-        // console.log("Raw: " + JSON.stringify(rawJSON));
+        // console.log("\nRaw: " + JSON.stringify(rawJSON));
         let replaced = await replaceJSONKeys(rawJSON);
-        // console.log("Replaced: " + JSON.stringify(replaced));
+        // console.log("\nReplaced: " + JSON.stringify(replaced));
         let formatted = await reformatJSON(replaced);
-        // console.log("Formatted: " + JSON.stringify(formatted));
+        // console.log("\nFormatted: " + JSON.stringify(formatted));
         
         filename = filename.replace("xlsx", "txt");
         const fs = require("fs");
