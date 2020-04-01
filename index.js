@@ -30,9 +30,11 @@ app.listen(process.env.PORT || port, () =>
     }, interval);
 });
 
-app.get('/', (req, res) => { res.send("Server chạy ngon lành."); });
 
-app.get('/schedules',function(req, res)
+
+app.get('/', function (req, res) { res.send("Server chạy ngon lành."); });
+
+app.get('/schedules', function(req, res)
 {
     const date = req.query.date;
     const classname = req.query.class;
@@ -79,6 +81,7 @@ app.get('/changeConvertAPI', function(req, res)
     fs.writeFileSync('./convertKEY.txt', apiKey);
     res.status(200).send('API key updated successfully.');
 });
+
 
 
 
@@ -166,20 +169,11 @@ async function getFollowingSchedules()
                     files.forEach((value, index) =>
                     {
                         let segments = value.split('-');
-                        if (parseInt(currSegs[0], 10) <= parseInt(segments[0], 10))
+                        if (parseInt(currSegs[0], 10) <= parseInt(segments[0], 10))     //  so sánh ngày
                         {
-                            followingDates.push(value);
-                        }
-                        else
-                            if (parseInt(currSegs[1], 10) < parseInt(segments[1], 10))
-                            {
+                            if (parseInt(currSegs[1], 10) <= parseInt(segments[1], 10)) //  so sánh tháng
                                 followingDates.push(value);
-                            }
-                            else
-                                if (parseInt(currSegs[2], 10) < parseInt(segments[2], 10))
-                                {
-                                    followingDates.push(value);
-                                }
+                        }
                     });
 
 
