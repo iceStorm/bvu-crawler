@@ -51,7 +51,25 @@ async function reformatJSON(json)
         {
             if (typeof json[i].Ordinal === "number")  //  Số thứ tự của các môn học trong một Khoa
             {
-                
+                let notes = json[i]['__EMPTY_5'];
+                let livetime = json[i]['__EMPTY_4'];
+                if (notes != undefined)
+                {
+                    if (/\d/.test(notes.charAt(0)))    //  là số của giờ học
+                    {
+                        livetime = json[i]['__EMPTY_5'];
+                        notes = json[i]['__EMPTY_4'] || "Không";
+                    }
+                    else
+                    {
+                        livetime = json[i]['__EMPTY_6'] || "Không";
+                    }
+                }
+                else
+                {
+                    livetime = json[i]['__EMPTY_6'] || "Không";
+                    notes = "Không";
+                }
 
 
                 let subject =
@@ -60,8 +78,8 @@ async function reformatJSON(json)
                     Class: json[i]['__EMPTY_1'],
                     Period: json[i]['__EMPTY_2'],
                     Teacher: json[i]['__EMPTY_3'],
-                    Notes: json[i]['__EMPTY_5'] || 'Không',
-                    LiveTime: json[i]['__EMPTY_6'] || 'Không'
+                    Notes: notes,
+                    LiveTime: livetime
                 }
                 
                 collection[departmentCounter].Subjects.push(subject);
