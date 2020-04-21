@@ -27,7 +27,7 @@ app.listen(process.env.PORT || port, () =>
     console.log(`App started on port ${port}.\n`); 
 
     
-    letCrawl();
+    // letCrawl();
     setInterval(() =>
     {
         letCrawl();
