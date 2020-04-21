@@ -1,0 +1,1 @@
+[{"Department":"Trung tâm phát triển kỹ năng mềm","Subjects":[{"Name":"Kỹ năng giao tiếp cơ bản","Class":"DH19KC","Period":"2→6","Teacher":"Lê Thị Hiếu Thảo","Notes":"Không","LiveTime":"09:00 → 11:00"},{"Name":"Kỹ năng giao tiếp cơ bản","Class":"DH19KT","Period":"2→6","Teacher":"Lê Thị Lan Anh","Notes":"Không","LiveTime":"09:00 → 11:00"}]}]

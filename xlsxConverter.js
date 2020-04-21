@@ -100,7 +100,7 @@ async function reformatJSON(json)
                 }
                 else
                 {
-                    if (json[i].Ordinal.includes("Trung tâm Phát triển kỹ năng mềm"))
+                    if (json[i].Ordinal.includes("kỹ năng mềm"))
                     {
                         dpIndex = json[i].Ordinal.indexOf("Trung");
                         dpName = json[i].Ordinal.substr(dpIndex);
@@ -134,7 +134,7 @@ async function saveToJSON(filename)
         filename = filename.replace("xlsx", "txt");
         const fs = require("fs");
         fs.writeFileSync(filename, JSON.stringify(formatted));
-        return ("Finished convert to: " + filename);
+        return ("Finished convert to: " + filename + '\n\n\n');
     }
     catch (err)
     {
@@ -164,10 +164,6 @@ async function download(filename)
             convertapi.convert('xlsx', { File: filename })
             .then(result =>
             {
-                // get converted file url
-                // console.log("Converted file url: " + result.file.url);
-
-                // save to file
                 return result.file.save(filename.replace("pdf", "xlsx"));
             })
             .then(filename =>

@@ -25,7 +25,7 @@ async function doCrawl()
             (
                 {
                     method: 'POST',
-                    url: 'https://bvu-chatbot.herokuapp.com/newSchedules',
+                    url: 'https://bvu-assistant.herokuapp.com/webhook/new-schedules',
                     json: {changes}
                 },
                 function(err, res, body)
