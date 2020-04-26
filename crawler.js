@@ -12,8 +12,12 @@ async function doCrawl()
     try
     {
         let links = await getLinkList();
+        // console.log('Links list:', links);
+
         let linkFile = await getLinkFileFromLinkList(links);
         console.log(`Files: ${linkFile.length} was found.`);
+
+
         let changes = await savePDF(linkFile);
         changes = JSON.parse(JSON.stringify(changes));
         console.log(`Crawling finished. ${changes.length} changes.`);
@@ -138,7 +142,10 @@ async function getLinkFileFromLinkList(linkList)
                         $('div.body > div#ctl00_ContentPlaceHolder_ContentID').each(function(index)
                         {
                             //  Tìm đường dẫn (thẻ a) đến file PDF trên Website trường
-                            const aTag = $(this).find('>p >a');
+                            const aTag = $(this).find('a');
+                            // console.log('Index:', index);
+                            // console.log('aTag:', aTag.html());
+
                             const PDFlink = `https://sinhvien.bvu.edu.vn${aTag.attr('href')}`;
                             resolve({Date: date, Link: PDFlink});
                         });
@@ -163,6 +170,9 @@ async function savePDF(linkFileList)
 {
     try
     {
+        // console.log(linkFileList);
+
+
         let changes = [];
         for (let i = 0; i < linkFileList.length; ++i)
         {
